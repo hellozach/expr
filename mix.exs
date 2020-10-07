@@ -2,16 +2,18 @@ defmodule ExCalc.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :expr,
-     version: "0.1.0",
-     elixir: "~> 1.0",
-     description: description,
-     package: package]
+    [
+      app: :expr,
+      version: "0.1.0",
+      elixir: "~> 1.5",
+      description: description(),
+      package: package()
+    ]
   end
 
   defp description do
     """
-    An Elixir library for parsing and evaluating mathematical 
+    An Elixir library for parsing and evaluating mathematical
     expressions
     """
   end
