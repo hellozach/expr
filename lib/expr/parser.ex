@@ -46,13 +46,17 @@ defmodule Expr.Parser do
 
   def parse([e|t], {ops, rpn}) do
     {top, _} = pop(ops)
-    a = oprs()[e][:a]
+    is_operand? = oprs()[e] != nil
+
     cond do
-      top == nil or top == "(" -> parse(t, {push(ops, e), rpn})
-      a == :r and oprs()[e].p >= oprs()[top].p ->
+      top == nil or top == "(" ->
         parse(t, {push(ops, e), rpn})
-      oprs()[e].p > oprs()[top].p  -> parse(t, {push(ops, e), rpn})
-      true -> parse(t, shift(e, {ops, rpn}))
+      is_operand? and oprs()[e].a == :r and oprs()[e].p >= oprs()[top].p ->
+        parse(t, {push(ops, e), rpn})
+      oprs()[e].p > oprs()[top].p ->
+        parse(t, {push(ops, e), rpn})
+      true ->
+        parse(t, shift(e, {ops, rpn}))
     end
   end
 
