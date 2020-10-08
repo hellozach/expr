@@ -46,13 +46,13 @@ defmodule Expr.Parser do
 
   def parse([e|t], {ops, rpn}) do
     {top, _} = pop(ops)
-    a = oprs[e].a
+    a = oprs()[e][:a]
     cond do
       top == nil or top == "(" -> parse(t, {push(ops, e), rpn})
-      a == :r and oprs[e].p >= oprs[top].p ->
+      a == :r and oprs()[e].p >= oprs()[top].p ->
         parse(t, {push(ops, e), rpn})
-      oprs[e].p > oprs[top].p  -> parse(t, {push(ops, e), rpn})
-      true                     -> parse(t, shift(e, {ops, rpn}))
+      oprs()[e].p > oprs()[top].p  -> parse(t, {push(ops, e), rpn})
+      true -> parse(t, shift(e, {ops, rpn}))
     end
   end
 
@@ -60,8 +60,8 @@ defmodule Expr.Parser do
     {top, stack} = pop(ops)
     cond do
       top == nil or top == "(" -> {push(ops, e), rpn}
-      oprs[top].p >= oprs[e].p -> shift(e, {stack, push(rpn, top)})
-      true                     -> {push(ops, e), rpn}
+      oprs()[top].p >= oprs()[e].p -> shift(e, {stack, push(rpn, top)})
+      true -> {push(ops, e), rpn}
     end
   end
 
@@ -99,8 +99,8 @@ defmodule Expr.Parser do
       prev == ")" and is_number(next) or next == "-" ->
         format(t, copy, ["-"|acc])
       is_number(next) -> format(tl(t), copy, [next * -1|acc])
-      next == "("     -> format(t, copy, ["#"|acc])
-      true            -> format(t, copy, ["#"|acc])
+      next == "(" -> format(t, copy, ["#"|acc])
+      true -> format(t, copy, ["#"|acc])
     end
   end
 
@@ -115,14 +115,25 @@ defmodule Expr.Parser do
     end
 
     cond do
-      is_number(prev)            -> format(t, copy, ["("|["*"|acc]])
-      prev == ")" and empty?     -> format(t, copy, ["("|["*"|acc]])
-      true                       -> format(t, copy, ["("|acc])
+      is_number(prev) -> format(t, copy, ["("|["*"|acc]])
+      prev == ")" and empty? -> format(t, copy, ["("|["*"|acc]])
+      true -> format(t, copy, ["("|acc])
     end
   end
 
   def format([{token, _}|t], copy, acc) do
     format(t, copy, [token|acc])
+  end
+
+  def valid_vars?(expr, vars), do: expr |> lex |> valid_vars?([], vars)
+  def valid_vars?([], acc, _), do: Enum.all?(acc, &(&1))
+
+  def valid_vars?([token|t], acc, vars) do
+    is_number? = num_parse(token) != :error
+    is_operand? = Map.has_key?(oprs(), token) || token == "(" || token == ")"
+    valid? = is_number? || is_operand? || vars[token]
+
+    valid_vars?(t, [valid?|acc], vars)
   end
 
   def conv(input), do: conv(input, [], %{})
@@ -131,13 +142,13 @@ defmodule Expr.Parser do
 
   def conv([token|t], acc, vars) do
     is_num? = num_parse(token)
-    constant? = constants[token]
+    constant? = constants()[token]
     variable? = vars[token]
     cond do
       is_num? != :error -> conv(t, [elem(is_num?, 0)|acc], vars)
-      constant? != nil  -> conv(t, [constant?|acc], vars)
-      variable? != nil  -> conv(t, [variable?|acc], vars)
-      true              -> conv(t, [token|acc], vars)
+      constant? != nil -> conv(t, [constant?|acc], vars)
+      variable? != nil -> conv(t, [variable?|acc], vars)
+      true -> conv(t, [token|acc], vars)
     end
   end
 

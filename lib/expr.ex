@@ -22,8 +22,8 @@ defmodule Expr do
     {top, stack} = pop(rpn)
     cond do
       is_number(top) -> calculate(stack, push(stk, top))
-      true           ->
-        func = oprs[top].f
+      true ->
+        func = oprs()[top].f
         cond do
           is_function(func, 2) ->
             {{o, _}, {ox, st}} = {pop(stk), elem(pop(stk), 1) |> pop}
