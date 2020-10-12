@@ -129,6 +129,7 @@ defmodule Expr.Parser do
     format(t, copy, [token|acc])
   end
 
+  def valid_vars?(nil, _), do: true
   def valid_vars?(expr, vars), do: expr |> lex |> valid_vars?([], vars)
   def valid_vars?([], acc, _), do: Enum.all?(acc, &(&1))
 

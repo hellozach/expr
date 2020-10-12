@@ -15,6 +15,14 @@ defmodule Expr do
     |> calculate
   end
 
+  def eval(expr, vars \\ %{}) do
+    if Expr.Parser.valid_vars?(expr, vars) do
+      {:ok, eval!(expr, vars)}
+    else
+      {:error, "Invalid variables provided."}
+    end
+  end
+
   def calculate(rpn), do: calculate(rpn, [])
   def calculate([], stk), do: stk
 
