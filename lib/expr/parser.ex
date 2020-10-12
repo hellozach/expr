@@ -53,7 +53,7 @@ defmodule Expr.Parser do
         parse(t, {push(ops, e), rpn})
       is_operand? and oprs()[e].a == :r and oprs()[e].p >= oprs()[top].p ->
         parse(t, {push(ops, e), rpn})
-      oprs()[e].p > oprs()[top].p ->
+      is_operand? and oprs()[e].p > oprs()[top].p ->
         parse(t, {push(ops, e), rpn})
       true ->
         parse(t, shift(e, {ops, rpn}))
